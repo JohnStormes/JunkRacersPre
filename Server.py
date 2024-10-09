@@ -28,6 +28,7 @@ players = []
 next_id = 0
 def threadedClient(conn, player_ID):
     global players
+    global next_id
     player = Player(player_ID)
     players.append(player)
     # get the information for this client when thread is created
@@ -54,6 +55,7 @@ def threadedClient(conn, player_ID):
                 break
             else:
                 # send other players data back to this client (or this players data if this is the only player on the server)
+                # reply is all data being sent back
                 if len(players) == 1:
                     reply.append(players[0])
                 else:
@@ -62,7 +64,11 @@ def threadedClient(conn, player_ID):
                 #print("Received: ", data)
                 #print("Sending: ", reply)
             
-            conn.sendall(pickle.dumps(reply))
+            # send out data
+            # current data:
+            # data[0]: list of other players in server OR current client if only that client is present in server
+            # data[1]: number of clients in server
+            conn.sendall(pickle.dumps((reply, len(players))))
         except:
             break
     print("Lost connection with player ID: " + str(player.getID()))
