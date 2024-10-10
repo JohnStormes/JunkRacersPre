@@ -5,7 +5,7 @@ import sys
 import pickle
 
 #server and port
-server = "128.226.250.52"
+server = ""
 port = 5555
 
 #create a socket
