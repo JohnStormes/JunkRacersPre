@@ -1,11 +1,15 @@
 import socket
 from _thread import *
-from Player import Player
+from player import Player
 import sys
 import pickle
 
 #server and port
-server = ""
+# ONLINE SERVER:
+# (leave as empty string)
+# LOCAL SERVER FOR DEBUGGING:
+# 128.226.250.52
+server = "128.226.250.52"
 port = 5555
 
 #create a socket

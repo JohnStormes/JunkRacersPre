@@ -33,3 +33,9 @@ def getScreenWidth():
 def drawText(window, text, font, text_color, x, y):
     img = font.render(text, True, text_color)
     window.blit(img, (x, y))
+
+# update window size
+def update():
+    global CLIENT_SCREEN_WIDTH, CLIENT_SCREEN_HEIGHT
+    info = pygame.display.Info()
+    CLIENT_SCREEN_WIDTH, CLIENT_SCREEN_HEIGHT = info.current_w, info.current_h
