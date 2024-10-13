@@ -21,7 +21,8 @@ try:
 except socket.error as e:
     str(e)
 
-# s.listen(2) means 2 people can connect to this server
+# s.listen(2) means after the queue of joinees exceeds 2, clients attempting to join are kicked
+# 5 is fine and should never change. Server should be able to process clients fast enough to never back up past 5
 s.listen(5)
 print("Waiting for a connection, server started")
 
