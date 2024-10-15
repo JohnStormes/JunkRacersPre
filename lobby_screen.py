@@ -27,6 +27,13 @@ def draw(window, player, players):
                     helper.getScreenX(50), helper.getScreenY(700))
     helper.drawText(window, "players in lobby: " + str(len(players)), helper.getArialFont(helper.getScreenX(50)), (0, 0, 0),
                     helper.getScreenX(300), helper.getScreenY(50))
+    
+    # temp draw functions of players in lobby
+    for x in range(len(players)):
+        if players[x].ID != player.ID:
+            players[x].draw(window)
+    player.move()
+    player.draw(window)
 
 # all updates for lobby screen
 def update():

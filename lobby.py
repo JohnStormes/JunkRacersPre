@@ -27,6 +27,7 @@ class Lobby:
         self.players = [host]
         self.ID = createID(ID_list)
         self.host = host
+        host.host = True
         self.host.setLobby(self.ID)
 
     # add a given player
@@ -41,9 +42,11 @@ class Lobby:
         print("player " + str(player.getID()) + " leaving lobby " + str(self.ID))
         for x in range(len(self.players)):
             if self.players[x].getID() == player.getID():
+                self.players[x].host = False
                 self.players.pop(x)
                 if len(self.players) != 0:
                     self.host = self.players[0]
+                    self.host.host = True
                 break
         self.printPlayerIDs()
     

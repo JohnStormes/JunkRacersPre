@@ -1,12 +1,14 @@
 #Johnathan Stormes 2024
 import pygame
 import random
+import helper
 
 class Player:
     def __init__(self, ID):
         self.ID = ID
         self.lobbyID = ""
         self.team = -1
+        self.host = False
         # movement (TEMP)
         self.x = 0
         self.y = 0
@@ -49,3 +51,8 @@ class Player:
         self.rect = (self.x, self.y, self.width, self.height)
     def draw(self, window):
         pygame.draw.rect(window, (self.r, self.g, self.b), self.rect)
+        if self.host:
+            host_str = "host"
+        else:
+            host_str = ""
+        helper.drawText(window, host_str, helper.getArialFont(helper.getScreenX(20)), (0, 0, 0), self.x, self.y - 20)

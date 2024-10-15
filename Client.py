@@ -133,11 +133,16 @@ def main():
         # data[1]: decision for player action in lobby
         # data[2]: join code attempt if and only if decision = helper.JOIN_LOBBY
         data = n.send((p, decision, join_code_attempt))
+        # receiving:
+        # data[0]: list of players in current lobby
+        # data[1]: number of players current lobby
+        players = data[0]
+        num_players = data[1]
 
         # find this client in player list and update player object
-        for x in range(len(data[0])):
-            if data[0][x].getID() == p.getID():
-                p = data[0][x]
+        for x in range(len(players)):
+            if players[x].getID() == p.getID():
+                p = players[x]
 
         # check if player joined lobby
         if join_code_attempt != "" and p.lobbyID != "":
@@ -148,8 +153,6 @@ def main():
             decision = helper.NO_DECISION
         if join_code_attempt != "":
             join_code_attempt = ""
-
-        num_players = data[1]
 
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -171,12 +174,12 @@ def main():
             break
 
         # UPDATE CALLS
-        update(window, p, data[0])
+        update(window, p, players)
 
         window.fill((255, 255, 255))
 
         # DRAW CALLS
-        draw(window, p, data[0])
+        draw(window, p, players)
 
         pygame.display.update()
 

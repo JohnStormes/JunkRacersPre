@@ -11,7 +11,7 @@ import helper
 # (leave as empty string)
 # LOCAL SERVER FOR DEBUGGING:
 # 128.226.250.52
-server = "128.226.250.52"
+server = ""
 port = 5555
 
 #create a socket
