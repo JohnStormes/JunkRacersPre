@@ -38,7 +38,7 @@ class Button():
 
     # draws the button when called
     def draw(self, window):
-        # draw the button
+        # draw the buttonj
         if self.clicked:
             window.blit(self.image_pressed, (self.rect.x, self.rect.y))
             return

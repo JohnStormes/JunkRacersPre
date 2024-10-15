@@ -2,6 +2,12 @@
 import pygame
 import os
 
+# client <-> server data transfer constants
+NO_DECISION = 0
+CREATE_LOBBY = 1
+JOIN_LOBBY = 2
+LEAVE_LOBBY = 3
+
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 pygame.init()
 info = pygame.display.Info()

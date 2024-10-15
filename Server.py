@@ -3,6 +3,8 @@ from _thread import *
 from player import Player
 import sys
 import pickle
+from lobby import Lobby
+import helper
 
 #server and port
 # ONLINE SERVER:
@@ -26,64 +28,124 @@ except socket.error as e:
 s.listen(5)
 print("Waiting for a connection, server started")
 
-# client data stored on server side
-players = []
+# on server side data
+lobbies = []            # list of all active lobbies
+lobby_ID_list = []            # list of all active lobby IDs
+num_of_players = 0
 
 #creates new thread for a client (one thread for each client always running)
 next_id = 0
+
 def threadedClient(conn, player_ID):
-    global players
+    global lobbies, lobby_ID_list, num_of_players
     global next_id
     player = Player(player_ID)
-    players.append(player)
+    num_of_players += 1
     # get the information for this client when thread is created
-    conn.send(pickle.dumps(players[players.index(player)]))
+    conn.send(pickle.dumps(player))
     print("connected player ID " + str(player.getID()))
     while True:
         try:
 
             # receive data from the client
-            data = pickle.loads(conn.recv(4096))          # 2048 is size of data being passed in, the larger this is, the longer the server takes
+            # CURRENT DATA BREAKDOWN:
+            # data[0] = player object to be updated in server
+            # data[1] = decision value
+            #           refer to helper constants
+            # data[2] = join code
+            #           for use ONLY when decision value == helper.JOIN_LOBBY
+            data = pickle.loads(conn.recv(4096))          # 4096 is size of data being passed in, the larger this is, the longer the server takes
+            player_received = data[0]
+            decision_value = data[1]
+            join_code = data[2]
 
-            # use the data (a player object) to update the player data
+            lobby_ID_index = -1
+
+            # find which lobby player is in, if any
+            if player_received.getLobby() != "":
+                lobby_ID = player_received.getLobby()
+                for x in range(len(lobby_ID_list)):
+                    if lobby_ID_list[x] == lobby_ID:
+                        lobby_ID_index = x
+
+            # use data[0] (a player object) to update the server side player data
             # reset player index every loop because as other players disconnect and reconnect, this index can change
             # find the players index by finding it's ID In the system, a unique value that cannot change
-            for x in range(len(players)):
-                if players[x].getID() == player.getID():
-                    player_index = x
-                    players[player_index] = data
-                    break
-            reply = []
+            if lobby_ID_index != -1:
+                for x in range(len(lobbies[lobby_ID_index].players)):
+                    if lobbies[lobby_ID_index].players[x].getID() == player.getID():
+                        player_index = x
+                        lobbies[lobby_ID_index].players[player_index] = player_received
+                        break
             
-            if not data:
+            # use data[1] to make decision
+            # create lobby
+            if decision_value == helper.CREATE_LOBBY:
+                new_lobby = Lobby(lobby_ID_list, player_received)
+                lobbies.append(new_lobby)
+                lobby_ID_list.append(new_lobby.ID)
+                print(lobby_ID_list)
+            # attempt to join lobby
+            elif decision_value == helper.JOIN_LOBBY:
+                print("player " + str(player_received.ID) + " attempting to join: ")
+                print(join_code)
+                print("")
+                lobby_found = ""
+                lobby_found_index = -1
+                for x in range(len(lobby_ID_list)):
+                    if join_code == lobby_ID_list[x]:
+                        lobby_found = lobbies[x]
+                        lobby_found_index = x
+                        lobby_ID_index = x
+                if lobby_found == "":
+                    print("lobby not found")
+                else:
+                    print("lobby found, adding player")
+                    lobbies[lobby_found_index].addPlayer(player_received)
+                    #player_received.lobbyID = join_code
+            # leave lobby
+            elif decision_value == helper.LEAVE_LOBBY:
+                lobbies[lobby_ID_index].removePlayer(player_received)
+                player_received.lobbyID = ""
+                # if there's no more players in the lobby, delete it
+                if len(lobbies[lobby_ID_index].players) == 0:
+                    print("removing lobby " + str(lobbies[lobby_ID_index].ID))
+                    lobbies.pop(lobby_ID_index)
+                    lobby_ID_list.pop(lobby_ID_index)
+
+            # create reply to client
+            reply = []
+            if not player_received:
                 print("Disconnected")
                 break
             else:
-                # send other players data back to this client (or this players data if this is the only player on the server)
-                # reply is all data being sent back
-                if len(players) == 1:
-                    reply.append(players[0])
+                # reply is player data being sent back to client
+                if player_received.lobbyID != "":
+                    reply = lobbies[lobby_ID_index].players
                 else:
-                    reply = players.copy()
-                    reply.pop(player_index)
+                    reply = [player_received]
                 #print("Received: ", data)
                 #print("Sending: ", reply)
             
-            # send out data
+
+            # send out data to client from server
             # current data:
-            # data[0]: list of other players in server OR current client if only that client is present in server
+            # data[0]: list of players in server including client
             # data[1]: number of clients in server
-            conn.sendall(pickle.dumps((reply, len(players))))
+            conn.sendall(pickle.dumps((reply, num_of_players)))
         except:
             break
     print("Lost connection with player ID: " + str(player.getID()))
 
-    # remove disconnected player from player list
-    for x in range(len(players)):
-        if players[x].getID() == player.getID():
-            print("removing player " + str(player.getID()) + " from index " + str(x))
-            players.pop(x)
-            break
+    # remove disconnected client from any lobby it was in
+    if player_received.getLobby() != "":
+        lobbies[lobby_ID_index].removePlayer(player_received)
+        # if there's no more players in the lobby, delete it
+        if len(lobbies[lobby_ID_index].players) == 0:
+            print("removing lobby " + str(lobbies[lobby_ID_index].ID))
+            lobbies.pop(lobby_ID_index)
+            lobby_ID_list.pop(lobby_ID_index)
+
     conn.close()
 
 while True:

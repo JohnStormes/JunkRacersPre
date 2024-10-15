@@ -79,7 +79,7 @@ def drawJoin(window):
     helper.drawText(window, "enter join code:", helper.getArialFont(150), (0, 0, 0), helper.getScreenX(480), helper.getScreenY(270))
     join_enter_button.draw(window)
     for x in range(len(code)):
-        helper.drawText(window, code[x], helper.getArialFont(170), (0, 0, 0),
+        helper.drawText(window, code[x], helper.getArialFont(helper.getScreenX(140)), (0, 0, 0),
                         helper.getScreenX(410 + x * 122), helper.getScreenY(460))
 
 # all draws for title screen state
@@ -114,7 +114,7 @@ def updateMain():
 
 # update calls for when the join dialogue is open
 def updateJoin():
-    global join_rect, join, join_enter, code
+    global join_rect, join, join_enter, code, join_img, join_rect
 
     # update button
     join_enter_button.update()
@@ -132,6 +132,10 @@ def updateJoin():
         print("join enter")
         join_enter = True
         join_enter_button.click_release = False
+
+    join_img = pygame.transform.scale(join_img, (helper.getScreenX(1100), helper.getScreenY(500)))
+    join_rect = join_img.get_rect()
+    join_rect.topleft = (helper.getScreenX(250), helper.getScreenY(200))
 
 # join code manipulation
 def addToCode(letter):
