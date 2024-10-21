@@ -32,6 +32,7 @@ SETTINGS_SCREEN = 1
 LOBBY_MENU_SCREEN = 2
 LOBBY_SCREEN = 3
 num_players = 0
+host_id = -1
 decision = helper.NO_DECISION
 join_code_attempt = ""
 
@@ -102,7 +103,7 @@ def update(window, client_player, players):
 
 # ______________________________________________________________________________________________________
 # this client's draw function. ALL DRAW FROM HERE
-def draw(window, client_player, players):
+def draw(window, client_player, players, host_id, team_list):
     global num_players
     if screen == 0:
         title_screen.draw(window, client_player, players)
@@ -111,12 +112,12 @@ def draw(window, client_player, players):
     elif screen == 2:
         lobby_menu_screen.draw(window)
     elif screen == 3:
-        lobby_screen.draw(window, client_player, players)
+        lobby_screen.draw(window, client_player, players, host_id, team_list)
 
 
 # this clients network init and game loop, handles network and player data being received from server
 def main():
-    global num_players, decision, join_code_attempt, screen
+    global num_players, decision, join_code_attempt, screen, host_id
     run = True
     n = Network()
     p = n.getData()
@@ -134,10 +135,14 @@ def main():
         # data[2]: join code attempt if and only if decision = helper.JOIN_LOBBY
         data = n.send((p, decision, join_code_attempt))
         # receiving:
-        # data[0]: list of players in current lobby
+        # data[0]: list of players in current lobby, or list containing just this player if not in lobby
         # data[1]: number of players current lobby
+        # data[2]: ID of host player in current lobby, -1 if not in a lobby
+        # data[3]: team list from lobby, -1 if not in a lobby
         players = data[0]
         num_players = data[1]
+        host_id = data[2]
+        team_list = data[3]
 
         # find this client in player list and update player object
         for x in range(len(players)):
@@ -179,7 +184,7 @@ def main():
         window.fill((255, 255, 255))
 
         # DRAW CALLS
-        draw(window, p, players)
+        draw(window, p, players, host_id, team_list)
 
         pygame.display.update()
 

@@ -11,7 +11,7 @@ import helper
 # (leave as empty string)
 # LOCAL SERVER FOR DEBUGGING:
 # 128.226.250.52
-server = ""
+server = "128.226.250.52"
 port = 5555
 
 #create a socket
@@ -107,6 +107,7 @@ def threadedClient(conn, player_ID):
             elif decision_value == helper.LEAVE_LOBBY:
                 lobbies[lobby_ID_index].removePlayer(player_received)
                 player_received.lobbyID = ""
+                lobby_ID_index = -1
                 # if there's no more players in the lobby, delete it
                 if len(lobbies[lobby_ID_index].players) == 0:
                     print("removing lobby " + str(lobbies[lobby_ID_index].ID))
@@ -114,26 +115,33 @@ def threadedClient(conn, player_ID):
                     lobby_ID_list.pop(lobby_ID_index)
 
             # create reply to client
-            reply = []
+            players = []
             if not player_received:
                 print("Disconnected")
                 break
             else:
-                # reply is player data being sent back to client
+                # players is player data being sent back to client
                 if player_received.lobbyID != "":
-                    reply = lobbies[lobby_ID_index].players
+                    players = lobbies[lobby_ID_index].players
                 else:
-                    reply = [player_received]
-                #print("Received: ", data)
-                #print("Sending: ", reply)
-            
+                    players = [player_received]
+                # host ID index and team list to be sent back to client
+                if lobby_ID_index != -1:
+                    host_id = lobbies[lobby_ID_index].host
+                    team_list = lobbies[lobby_ID_index].team_list
+                else:
+                    host_id = -1
+                    team_list = -1
 
             # send out data to client from server
             # current data:
-            # data[0]: list of players in server including client
+            # data[0]: list of players in lobby including client, or just client if client is not in lobby
             # data[1]: number of clients in server
-            conn.sendall(pickle.dumps((reply, num_of_players)))
+            # data[2]: ID of host player in current lobby, -1 if not in a lobby
+            # data[3]: team list from lobby, -1 if not in a lobby
+            conn.sendall(pickle.dumps((players, num_of_players, host_id, team_list)))
         except:
+            print("server error")
             break
     print("Lost connection with player ID: " + str(player.getID()))
 

@@ -18,35 +18,74 @@ def createID(ID_list):
 class Lobby:
 
     # print all player IDs
-    def printPlayerIDs(self):
+    def printPlayerInfo(self):
         for x in range(len(self.players)):
             print (self.players[x].getID())
+
+    # print team hierarchy
+    def printTeamHierarchy(self):
+        for x in range(len(self.team_list)):
+            for y in range(len(self.team_list[x])):
+                print("team " + str(x) + ", player ID: " + str(self.team_list[x][y].ID))
 
     # initialize
     def __init__(self, ID_list, host):
         self.players = [host]
         self.ID = createID(ID_list)
-        self.host = host
-        host.host = True
-        self.host.setLobby(self.ID)
+        self.host = host.ID
+        self.players[0].setLobby(self.ID)
+        self.team_list = [[host]]
+        self.team_count = 1
 
     # add a given player
     def addPlayer(self, player):
         if len(self.players) < 10:
             player.lobbyID = self.ID
             self.players.append(player)
-        self.printPlayerIDs()
+            found_slot = False
+            for x in range(len(self.team_list)):
+                if len(self.team_list[x]) != 2:
+                    open_slot = x
+                    self.team_list[open_slot].append(player)
+                    found_slot = True
+                    break
+            if not found_slot:
+                self.team_list.append([player])
+                self.team_count += 1
+        #self.printPlayerInfo()
+        self.printTeamHierarchy()
 
     # remove a given player
     def removePlayer(self, player):
-        print("player " + str(player.getID()) + " leaving lobby " + str(self.ID))
+        #self.printPlayerInfo()
+        print("player " + str(player.ID) + " leaving lobby " + str(self.ID))
+
+        # find player in lobby
+        found_ID_index = -1
         for x in range(len(self.players)):
-            if self.players[x].getID() == player.getID():
-                self.players[x].host = False
-                self.players.pop(x)
-                if len(self.players) != 0:
-                    self.host = self.players[0]
-                    self.host.host = True
-                break
-        self.printPlayerIDs()
+            if self.players[x].ID == player.ID:
+                found_ID_index = x
+
+        # if player attempting to remove is in the lobby
+        if found_ID_index != -1:
+            self.players.pop(found_ID_index)
+            # find player ID in team list and remove
+            team_x = -1
+            team_y = -1
+            for x in range(len(self.team_list)):
+                for y in range(len(self.team_list[x])):
+                    if self.team_list[x][y].ID == player.ID:
+                        team_x = x
+                        team_y = y
+            
+            if team_x != -1 and team_y != -1:
+                self.team_list[team_x].pop(team_y)
+                if len(self.team_list[team_x]) == 0:
+                    self.team_list.pop(team_x)
+                    self.team_count -= 1
+
+            # update host
+            if player.ID == self.host and len(self.players) != 0:
+                self.host = self.players[0].ID
+        self.printTeamHierarchy()
     

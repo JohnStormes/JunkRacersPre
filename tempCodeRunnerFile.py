@@ -1,1 +1,1 @@
-                print("b")
+# data[3]: team list from lobby, -1 if not in a lobby
