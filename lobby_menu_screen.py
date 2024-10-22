@@ -80,7 +80,7 @@ def drawJoin(window):
     join_enter_button.draw(window)
     for x in range(len(code)):
         helper.drawText(window, code[x], helper.getArialFont(helper.getScreenX(140)), (0, 0, 0),
-                        helper.getScreenX(410 + x * 122), helper.getScreenY(460))
+                        helper.getScreenX(460 + x * 121), helper.getScreenY(525), True)
 
 # all draws for title screen state
 def draw(window):

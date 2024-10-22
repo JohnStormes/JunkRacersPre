@@ -34,7 +34,7 @@ class Lobby:
         self.ID = createID(ID_list)
         self.host = host.ID
         self.players[0].setLobby(self.ID)
-        self.team_list = [[host]]
+        self.team_list = [[host], [], [], [], []]
         self.team_count = 1
 
     # add a given player
@@ -50,8 +50,7 @@ class Lobby:
                     found_slot = True
                     break
             if not found_slot:
-                self.team_list.append([player])
-                self.team_count += 1
+                print("lobby full!")
         #self.printPlayerInfo()
         self.printTeamHierarchy()
 
@@ -80,12 +79,27 @@ class Lobby:
             
             if team_x != -1 and team_y != -1:
                 self.team_list[team_x].pop(team_y)
-                if len(self.team_list[team_x]) == 0:
-                    self.team_list.pop(team_x)
-                    self.team_count -= 1
 
             # update host
             if player.ID == self.host and len(self.players) != 0:
                 self.host = self.players[0].ID
         self.printTeamHierarchy()
+
+    # player attempt to change teams
+    def changeTeam(self, player, team):
+        # find player ID in team list
+        team_x = -1
+        team_y = -1
+        for x in range(len(self.team_list)):
+            for y in range(len(self.team_list[x])):
+                if self.team_list[x][y].ID == player.ID:
+                    team_x = x
+                    team_y = y
+
+        if len(self.team_list[team]) < 2:
+            self.team_list[team_x].pop(team_y)
+            self.team_list[team].append(player)
+            return True
+        else:
+            return False
     

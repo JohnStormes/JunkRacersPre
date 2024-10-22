@@ -7,6 +7,7 @@ NO_DECISION = 0
 CREATE_LOBBY = 1
 JOIN_LOBBY = 2
 LEAVE_LOBBY = 3
+CHANGE_TEAM = 4
 
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 pygame.init()
@@ -26,9 +27,12 @@ def getScreenY(y):
     return int(newy)
 
 # visuals
-def drawText(window, text, font, text_color, x, y):
+def drawText(window, text, font, text_color, x, y, centered = False):
     img = font.render(text, True, text_color)
-    window.blit(img, (x, y))
+    text_rect = (x, y)
+    if centered:
+        text_rect = img.get_rect(center=(x, y))
+    window.blit(img, text_rect)
 
 # fonts / text
 def getArialFont(size):

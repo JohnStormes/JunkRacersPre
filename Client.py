@@ -35,6 +35,7 @@ num_players = 0
 host_id = -1
 decision = helper.NO_DECISION
 join_code_attempt = ""
+team_change_request = -1
 
 # inits
 title_screen.__init__()
@@ -54,6 +55,12 @@ def attemptJoin(join_code):
 def createLobby():
     global decision
     decision = helper.CREATE_LOBBY
+
+# called when a client attempts to change teams
+def changeTeam(team):
+    global team_change_request, decision
+    team_change_request = team
+    decision = helper.CHANGE_TEAM
 
 # ______________________________________________________________________________________________________
 # this client's update function. ALL UPDATE FROM HERE
@@ -99,6 +106,10 @@ def update(window, client_player, players):
             screen = LOBBY_MENU_SCREEN
             decision = helper.LEAVE_LOBBY
             lobby_screen.exit = False
+        elif lobby_screen.change_team:
+            changeTeam(lobby_screen.change_team_value)
+            lobby_screen.change_team_value = -1
+            lobby_screen.change_team = False
     helper.update()
 
 # ______________________________________________________________________________________________________
@@ -117,7 +128,7 @@ def draw(window, client_player, players, host_id, team_list):
 
 # this clients network init and game loop, handles network and player data being received from server
 def main():
-    global num_players, decision, join_code_attempt, screen, host_id
+    global num_players, decision, join_code_attempt, screen, host_id, team_change_request
     run = True
     n = Network()
     p = n.getData()
@@ -133,7 +144,8 @@ def main():
         # data[0]: this client's player
         # data[1]: decision for player action in lobby
         # data[2]: join code attempt if and only if decision = helper.JOIN_LOBBY
-        data = n.send((p, decision, join_code_attempt))
+        # data[3]: team value for team change request if and only if decision = helper.CHANGE_TEAM
+        data = n.send((p, decision, join_code_attempt, team_change_request))
         # receiving:
         # data[0]: list of players in current lobby, or list containing just this player if not in lobby
         # data[1]: number of players current lobby
@@ -153,11 +165,13 @@ def main():
         if join_code_attempt != "" and p.lobbyID != "":
             screen = LOBBY_SCREEN
 
-        # ensure that a decision/join code is sent to the server ONLY ONCE
+        # ensure that one time actions are sent to the server ONLY ONCE!
         if decision != helper.NO_DECISION:
             decision = helper.NO_DECISION
         if join_code_attempt != "":
             join_code_attempt = ""
+        if team_change_request != -1:
+            team_change_request = -1
 
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -170,9 +184,11 @@ def main():
             # code typing in lobby menu screen
             if event.type == pygame.KEYDOWN:
                 if event.key >= pygame.K_a and event.key <= pygame.K_z:
-                    lobby_menu_screen.addToCode(event.key)
+                    if screen == LOBBY_MENU_SCREEN and lobby_menu_screen.join:
+                        lobby_menu_screen.addToCode(event.key)
                 elif event.key == pygame.K_BACKSPACE:
-                    lobby_menu_screen.codeBackspace()
+                    if screen == LOBBY_MENU_SCREEN and lobby_menu_screen.join:
+                        lobby_menu_screen.codeBackspace()
         if screen == 0 and title_screen.quit:
             run = False
             pygame.quit()

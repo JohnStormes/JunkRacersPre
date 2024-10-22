@@ -10,12 +10,9 @@ class Player:
         self.team = -1
         # movement (TEMP)
         self.x = helper.CLIENT_SCREEN_WIDTH / 2
-        self.y = helper.CLIENT_SCREEN_HEIGHT / 2
-        self.width = 50
-        self.height = 50
+        self.y = helper.getScreenY(700)
         self.velocity = 6
-        self.rect = (self.x, self.y, self.width, self.height)
-        self.border_rect = (self.x, self.y, self.width, self.height)
+        self.radius = helper.getScreenX(35)
         self.r = random.randrange(1, 255)
         self.g = random.randrange(1, 255)
         self.b = random.randrange(1, 255)
@@ -37,25 +34,26 @@ class Player:
     # movement (TEMP)
     def move(self):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and self.x > 0:
+        if keys[pygame.K_a] and self.x > self.radius:
             self.x -= self.velocity
-        if keys[pygame.K_d] and self.x < helper.CLIENT_SCREEN_WIDTH - self.width:
+        if keys[pygame.K_d] and self.x < helper.CLIENT_SCREEN_WIDTH - self.radius:
             self.x += self.velocity
-        if keys[pygame.K_w] and self.y > 0:
+        if keys[pygame.K_w] and self.y > self.radius + helper.getScreenY(540):
             self.y -= self.velocity
-        if keys[pygame.K_s] and self.y< helper.CLIENT_SCREEN_HEIGHT - self.height:
+        if keys[pygame.K_s] and self.y< helper.CLIENT_SCREEN_HEIGHT - self.radius:
             self.y += self.velocity
         self.update()
 
     def update(self):
-        self.rect = (self.x, self.y, self.width, self.height)
-        self.border_rect = (self.x, self.y, self.width, self.height)
+        pass
+
     def draw(self, window, host_id, is_client, team_list):
         # draw moving square for player
         if is_client:
-            self.rect = (self.x + 5, self.y + 5, self.width - 10, self.height - 10)
-            pygame.draw.rect(window, (255, 255, 0), self.border_rect)
-        pygame.draw.rect(window, (self.r, self.g, self.b), self.rect)
+            pygame.draw.circle(window, (255, 255, 0), (self.x, self.y), self.radius)
+            pygame.draw.circle(window, (self.r, self.g, self.b), (self.x, self.y), self.radius - 5)
+        else:
+            pygame.draw.circle(window, (self.r, self.g, self.b), (self.x, self.y), self.radius)
         
         # draw player square on team garage
         team = -1
@@ -65,15 +63,16 @@ class Player:
                 if team_list[x][y].ID == self.ID:
                     team = x
                     index = y
+        garage_y = helper.getScreenY(480)
         if index == 0 and team != -1:
-            garage_rect = (helper.CLIENT_SCREEN_WIDTH / 10 * (1 + team * 2) - 75, helper.getScreenY(450), 50, 50)
+            garage_x = helper.CLIENT_SCREEN_WIDTH / 10 * (1 + team * 2) - self.radius - 15
         if index == 1 and team != -1:
-            garage_rect = (helper.CLIENT_SCREEN_WIDTH / 10 * (1 + team * 2) + 25, helper.getScreenY(450), 50, 50)
-        pygame.draw.rect(window, (self.r, self.g, self.b), garage_rect)
+            garage_x = helper.CLIENT_SCREEN_WIDTH / 10 * (1 + team * 2) + self.radius + 15
+        pygame.draw.circle(window, (self.r, self.g, self.b), (garage_x, garage_y), self.radius)
 
         # draw host and ID text
         if self.ID == host_id:
-            helper.drawText(window, "host", helper.getArialFont(helper.getScreenX(20)), (0, 0, 0), self.x, self.y - 30)
-        helper.drawText(window, str(self.ID), helper.getArialFont(helper.getScreenX(20)), (0, 0, 0), self.x, self.y + self.height)
+            helper.drawText(window, "host", helper.getArialFont(helper.getScreenX(20)), (0, 0, 0), self.x, self.y - self.radius - 15, True)
+        helper.drawText(window, str(self.ID), helper.getArialFont(helper.getScreenX(20)), (0, 0, 0), self.x, self.y, True)
         helper.drawText(window, str(self.ID), helper.getArialFont(helper.getScreenX(20)), (0, 0, 0)
-                        , garage_rect[0], helper.getScreenY(460))
+                        , garage_x, helper.getScreenY(480), True)
